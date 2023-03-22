@@ -1,3 +1,4 @@
+import 'package:expenses/components/chart.dart';
 import 'package:expenses/components/transaction_form.dart';
 import 'package:expenses/models/transaction.dart';
 import 'package:flutter/material.dart';
@@ -21,13 +22,16 @@ class ExpensesApp extends StatelessWidget {
           secondary: Colors.amber,
         ),
         textTheme: tema.textTheme.copyWith(
-          titleLarge: const TextStyle(
-            fontFamily: 'OpenSans',
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
+            titleLarge: const TextStyle(
+              fontFamily: 'OpenSans',
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+            labelLarge: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            )),
         appBarTheme: const AppBarTheme(
           titleTextStyle: TextStyle(
             fontFamily: 'OpenSans',
@@ -48,27 +52,22 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final _transactions = [
-    Transaction(
-      id: 't1',
-      title: 'Novo Tênis de Corrida',
-      value: 310.76,
-      date: DateTime.now(),
-    ),
-    Transaction(
-      id: 't2',
-      title: 'Conta de Luz',
-      value: 211.30,
-      date: DateTime.now(),
-    )
-  ];
+  final _transactions = <Transaction>[];
 
-  _addTransaction(String title, double value) {
+  List<Transaction> get _recentTransactions {
+    return _transactions.where((tr) {
+      return tr.date.isAfter(DateTime.now().subtract(
+        const Duration(days: 7),
+      ));
+    }).toList();
+  }
+
+  _addTransaction(String title, double value, DateTime date) {
     final newTrasaction = Transaction(
       id: Random().nextDouble().toString(),
       title: title,
       value: value,
-      date: DateTime.now(),
+      date: date,
     );
 
     setState(() {
@@ -76,6 +75,12 @@ class _MyHomePageState extends State<MyHomePage> {
     });
 
     Navigator.of(context).pop();
+  }
+
+  _removeTransaction(String id) {
+    setState(() {
+      _transactions.removeWhere((tr) => tr.id == id);
+    });
   }
 
   _openTrasactionFormModal(BuildContext context) {
@@ -103,15 +108,8 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(
-              width: double.infinity,
-              child: Card(
-                color: Colors.blue,
-                elevation: 5,
-                child: Text('Gráfico'),
-              ),
-            ),
-            TransactionList(_transactions)
+            Chart(_recentTransactions),
+            TransactionList(_transactions, _removeTransaction)
           ],
         ),
       ),
